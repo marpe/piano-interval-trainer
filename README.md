@@ -2,7 +2,7 @@
 
 Ear training app — listen to two piano notes and identify the interval.
 
-**Live:** https://martinpersson.org/piano-interval-trainer/
+**Live:** https://marpe.github.io/piano-interval-trainer/
 
 ![Screenshot](https://raw.githubusercontent.com/marpe/piano-interval-trainer/master/public/screenshot.png)
 
