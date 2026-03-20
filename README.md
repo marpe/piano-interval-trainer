@@ -4,7 +4,7 @@ A web-based ear training app for learning to recognize musical intervals. Listen
 
 **Live app:** https://martinpersson.org/piano-interval-trainer/
 
-![Screenshot](screenshot.png)
+![Screenshot](https://raw.githubusercontent.com/marpe/piano-interval-trainer/master/public/screenshot.png)
 
 ## Features
 
