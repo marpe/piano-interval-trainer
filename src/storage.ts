@@ -17,7 +17,7 @@ export function loadState(): PersistedState {
   const defaults: PersistedState = {
     settings: {
       enabledIntervals: new Set(DEFAULT_ENABLED),
-      direction: 'ascending',
+      direction: 'both',
       playbackMode: 'melodic',
       gameMode: 'interval',
       autoPlay: true,
@@ -89,13 +89,13 @@ export function saveScores(score: ScoreState): void {
 const LEVEL_KEY = 'interval-trainer-level-v1';
 
 export function loadLevelState(): LevelState {
-  const defaults: LevelState = { levelMode: false, currentLevel: 1, correctInLevel: 0 };
+  const defaults: LevelState = { levelMode: true, currentLevel: 1, correctInLevel: 0 };
   try {
     const raw = localStorage.getItem(LEVEL_KEY);
     if (!raw) return defaults;
     const p = JSON.parse(raw);
     return {
-      levelMode: typeof p.levelMode === 'boolean' ? p.levelMode : false,
+      levelMode: typeof p.levelMode === 'boolean' ? p.levelMode : true,
       currentLevel: typeof p.currentLevel === 'number' && p.currentLevel >= 1 ? p.currentLevel : 1,
       correctInLevel: typeof p.correctInLevel === 'number' && p.correctInLevel >= 0 ? p.correctInLevel : 0,
     };

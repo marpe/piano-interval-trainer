@@ -117,19 +117,23 @@ export function App() {
       };
     }));
 
-    if (levelState.levelMode && correct) {
-      if (levelState.currentLevel >= MAX_LEVEL) {
-        // At max level: cap the dot fill at CORRECT_PER_LEVEL
-        if (levelState.correctInLevel < CORRECT_PER_LEVEL) {
-          setLevelState('correctInLevel', levelState.correctInLevel + 1);
+    if (levelState.levelMode) {
+      if (correct) {
+        if (levelState.currentLevel >= MAX_LEVEL) {
+          // At max level: cap the dot fill at CORRECT_PER_LEVEL
+          if (levelState.correctInLevel < CORRECT_PER_LEVEL) {
+            setLevelState('correctInLevel', levelState.correctInLevel + 1);
+          }
+        } else {
+          const next = levelState.correctInLevel + 1;
+          if (next >= CORRECT_PER_LEVEL) {
+            setLevelState({ currentLevel: levelState.currentLevel + 1, correctInLevel: 0 });
+          } else {
+            setLevelState('correctInLevel', next);
+          }
         }
       } else {
-        const next = levelState.correctInLevel + 1;
-        if (next >= CORRECT_PER_LEVEL) {
-          setLevelState({ currentLevel: levelState.currentLevel + 1, correctInLevel: 0 });
-        } else {
-          setLevelState('correctInLevel', next);
-        }
+        setLevelState('correctInLevel', Math.max(0, levelState.correctInLevel - 1));
       }
     }
   }
