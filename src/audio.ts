@@ -5,12 +5,30 @@ const SOUND_META: Record<PianoSound, { dir: string; ext: string }> = {
   'dusty-keys': { dir: 'dusty-keys', ext: 'wav' },
 };
 
-let audioCache = new Map<number, HTMLAudioElement>();
+let bufferCache = new Map<number, AudioBuffer>();
 let volume = 0.5;
 let currentSound: PianoSound = '88-virtual';
+let ctx: AudioContext | null = null;
+let masterGain: GainNode | null = null;
+
+function getCtx(): AudioContext {
+  if (!ctx || ctx.state === 'closed') {
+    ctx = new AudioContext();
+    masterGain = ctx.createGain();
+    masterGain.gain.value = volume;
+    masterGain.connect(ctx.destination);
+  }
+  if (ctx.state === 'suspended') {
+    ctx.resume();
+  }
+  return ctx;
+}
 
 export function setVolume(v: number): void {
   volume = Math.max(0, Math.min(1, v));
+  if (masterGain) {
+    masterGain.gain.value = volume;
+  }
 }
 
 export function getAudioUrl(key: number): string {
@@ -18,54 +36,61 @@ export function getAudioUrl(key: number): string {
   return `${import.meta.env.BASE_URL}sound/${dir}/${key}.${ext}`;
 }
 
+async function loadBuffer(key: number): Promise<void> {
+  try {
+    const response = await fetch(getAudioUrl(key));
+    const arrayBuffer = await response.arrayBuffer();
+    const audioBuffer = await getCtx().decodeAudioData(arrayBuffer);
+    bufferCache.set(key, audioBuffer);
+  } catch {}
+}
+
 export function setSound(sound: PianoSound): void {
   if (sound === currentSound) {
     return;
   }
   currentSound = sound;
-  audioCache = new Map();
-  // Preload the new pack
+  bufferCache = new Map();
   for (let key = 16; key <= 65; key++) {
-    const audio = new Audio(getAudioUrl(key));
-    audio.preload = 'auto';
-    audioCache.set(key, audio);
+    loadBuffer(key);
   }
 }
 
 export function initAudio(sound: PianoSound = '88-virtual'): void {
   currentSound = sound;
-  audioCache = new Map();
+  bufferCache = new Map();
   for (let key = 16; key <= 65; key++) {
-    const audio = new Audio(getAudioUrl(key));
-    audio.preload = 'auto';
-    audioCache.set(key, audio);
+    loadBuffer(key);
   }
 }
 
-export function playKey(key: number): HTMLAudioElement {
-  let audio = audioCache.get(key);
-  if (!audio) {
-    audio = new Audio(getAudioUrl(key));
-    audioCache.set(key, audio);
+export function playKey(key: number): () => void {
+  const buf = bufferCache.get(key);
+  if (!buf || !masterGain) {
+    return () => {};
   }
-  const clone = audio.cloneNode() as HTMLAudioElement;
-  clone.volume = volume;
-  clone.play().catch(() => {});
-  return clone;
+  const audioCtx = getCtx();
+  const source = audioCtx.createBufferSource();
+  source.buffer = buf;
+  source.connect(masterGain);
+  source.start();
+  return () => {
+    try { source.stop(); } catch {}
+  };
 }
 
 export function playMelodic(k1: number, k2: number, delay = 500): () => void {
-  const playing: HTMLAudioElement[] = [playKey(k1)];
-  const timer = setTimeout(() => playing.push(playKey(k2)), delay);
+  const cancels: Array<() => void> = [playKey(k1)];
+  const timer = setTimeout(() => cancels.push(playKey(k2)), delay);
   return () => {
     clearTimeout(timer);
-    playing.forEach(a => { a.pause(); a.currentTime = 0; });
+    cancels.forEach(c => c());
   };
 }
 
 export function playHarmonic(k1: number, k2: number): () => void {
-  const playing = [playKey(k1), playKey(k2)];
-  return () => playing.forEach(a => { a.pause(); a.currentTime = 0; });
+  const cancels = [playKey(k1), playKey(k2)];
+  return () => cancels.forEach(c => c());
 }
 
 export function playSequence(rootKey: number, semitones: number[], noteDelay = 350): () => void {
@@ -76,29 +101,17 @@ export function playSequence(rootKey: number, semitones: number[], noteDelay = 3
   return () => timers.forEach(clearTimeout);
 }
 
-let sharedCtx: AudioContext | null = null;
-
-function getCtx(): AudioContext {
-  if (!sharedCtx || sharedCtx.state === 'closed') {
-    sharedCtx = new AudioContext();
-  }
-  if (sharedCtx.state === 'suspended') {
-    sharedCtx.resume();
-  }
-  return sharedCtx;
-}
-
 export function playCorrectSound(): void {
-  const ctx = getCtx();
-  const t = ctx.currentTime;
-  const gain = ctx.createGain();
-  gain.connect(ctx.destination);
+  const audioCtx = getCtx();
+  const t = audioCtx.currentTime;
+  const gain = audioCtx.createGain();
+  gain.connect(audioCtx.destination);
   gain.gain.setValueAtTime(volume * 0.22, t);
   gain.gain.exponentialRampToValueAtTime(0.001, t + 0.45);
 
   const freqs = [1047, 1319]; // C6, E6 — bright major third chime
   freqs.forEach((freq, i) => {
-    const osc = ctx.createOscillator();
+    const osc = audioCtx.createOscillator();
     osc.type = 'sine';
     osc.frequency.value = freq;
     osc.connect(gain);
@@ -108,14 +121,14 @@ export function playCorrectSound(): void {
 }
 
 export function playWrongSound(): void {
-  const ctx = getCtx();
-  const t = ctx.currentTime;
-  const gain = ctx.createGain();
-  gain.connect(ctx.destination);
+  const audioCtx = getCtx();
+  const t = audioCtx.currentTime;
+  const gain = audioCtx.createGain();
+  gain.connect(audioCtx.destination);
   gain.gain.setValueAtTime(volume * 0.18, t);
   gain.gain.exponentialRampToValueAtTime(0.001, t + 0.35);
 
-  const osc = ctx.createOscillator();
+  const osc = audioCtx.createOscillator();
   osc.type = 'sawtooth';
   osc.frequency.setValueAtTime(220, t);
   osc.frequency.exponentialRampToValueAtTime(110, t + 0.3);

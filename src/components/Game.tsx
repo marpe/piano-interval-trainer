@@ -221,7 +221,7 @@ export function Game(props: GameProps) {
     if ((e.target as HTMLElement).tagName === 'INPUT') {
       return;
     }
-    if (e.key === 'd' || e.key === 'D') {
+    if ((e.key === 'd' || e.key === 'D') && import.meta.env.DEV) {
       props.onToggleDebug();
     } else if (e.key === ' ') {
       e.preventDefault();
@@ -461,7 +461,9 @@ export function Game(props: GameProps) {
                 <div class="shortcuts-list">
                   <div class="shortcut-row"><kbd>Space</kbd><span>Play Again</span></div>
                   <div class="shortcut-row"><kbd>Enter</kbd><span>Next question</span></div>
-                  <div class="shortcut-row"><kbd>D</kbd><span>Toggle debug</span></div>
+                  <Show when={import.meta.env.DEV}>
+                    <div class="shortcut-row"><kbd>D</kbd><span>Toggle debug</span></div>
+                  </Show>
                   <Show when={props.settings.gameMode === 'interval'}>
                     <div class="shortcut-row"><kbd>1</kbd><span class="shortcut-muted">–</span><kbd>0</kbd><kbd>-</kbd><kbd>=</kbd><span>Select interval</span></div>
                   </Show>
