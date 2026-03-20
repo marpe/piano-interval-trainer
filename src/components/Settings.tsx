@@ -1,5 +1,5 @@
 import { For, Show } from 'solid-js';
-import type { GameSettings, LevelState, IntervalName, Direction, PlaybackMode, GameMode } from '../types';
+import type { GameSettings, LevelState, IntervalName } from '../types';
 import { ALL_INTERVALS, INTERVAL_PREVIEWS, getIntervalsForLevel } from '../intervals';
 import { playSequence, playMelodic } from '../audio';
 
@@ -11,11 +11,6 @@ interface SettingsProps {
   onToggleInterval: (name: IntervalName) => void;
   onResetIntervals: () => void;
   onEnableAllIntervals: () => void;
-  onSetDirection: (d: Direction) => void;
-  onSetPlaybackMode: (m: PlaybackMode) => void;
-  onSetGameMode: (m: GameMode) => void;
-  onToggleLevelMode: () => void;
-  onResetLevel: () => void;
 }
 
 export function Settings(props: SettingsProps) {
@@ -31,26 +26,7 @@ export function Settings(props: SettingsProps) {
               <button class="btn-reset" onClick={props.onResetIntervals}>Beginner</button>
               <button class="btn-reset" onClick={props.onEnableAllIntervals}>All</button>
             </Show>
-            <Show when={props.levelState.levelMode}>
-              <button class="btn-reset" onClick={props.onResetLevel}>Reset Level</button>
-            </Show>
           </div>
-        </div>
-
-        <div class="level-mode-toggle">
-          <label class="toggle-label">
-            <input
-              type="checkbox"
-              checked={props.levelState.levelMode}
-              onChange={props.onToggleLevelMode}
-            />
-            Level Mode
-          </label>
-          <Show when={props.levelState.levelMode}>
-            <span class="level-mode-hint">
-              Intervals unlock as you progress — 10 correct answers per level
-            </span>
-          </Show>
         </div>
 
         <div class="interval-list">

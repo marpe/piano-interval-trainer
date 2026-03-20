@@ -4,7 +4,6 @@ import { ALL_INTERVALS } from '../intervals';
 
 interface ScorePopoverProps {
   score: ScoreState;
-  onReset: () => void;
   children?: JSX.Element;
 }
 
@@ -29,11 +28,6 @@ export function ScorePopover(props: ScorePopoverProps) {
     } else {
       setOpen(true);
     }
-  }
-
-  function handleReset() {
-    props.onReset();
-    close();
   }
 
   return (
@@ -61,8 +55,7 @@ export function ScorePopover(props: ScorePopoverProps) {
               <div class="stats-popover-header">
                 <span class="stats-title">Session Stats</span>
                 <span class="stats-accuracy">Overall: <strong>{accuracy()}</strong></span>
-                <button class="btn-reset-scores" onClick={e => { e.stopPropagation(); handleReset(); }}>Reset</button>
-                <button class="btn-close-stats" onClick={e => { e.stopPropagation(); close(); }}>✕</button>
+<button class="btn-close-popover" onClick={e => { e.stopPropagation(); close(); }}>✕</button>
               </div>
               <Show when={attempted().length === 0}>
                 <p class="stats-empty">No questions answered yet.</p>

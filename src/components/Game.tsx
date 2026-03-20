@@ -5,6 +5,7 @@ import { playMelodic, playHarmonic, playKey, playCorrectSound, playWrongSound } 
 import { Piano } from './Piano';
 import { ScorePopover } from './ScorePopover';
 import { LevelProgress } from './LevelProgress';
+import { Settings } from './Settings';
 
 interface GameProps {
   settings: GameSettings;
@@ -12,7 +13,6 @@ interface GameProps {
   score: ScoreState;
   volume: number;
   onScore: (correct: boolean, intervalName: IntervalName) => void;
-  onResetScores: () => void;
   onToggleDebug: () => void;
   onSetAutoPlay: (v: boolean) => void;
   onSetShowRootKey: (v: boolean) => void;
@@ -21,7 +21,12 @@ interface GameProps {
   onSetDirection: (d: Direction) => void;
   onSetPlaybackMode: (m: PlaybackMode) => void;
   onVolumeChange: (v: number) => void;
-  onOpenSettings: () => void;
+  onResetScores: () => void;
+  resetTick: number;
+  onToggleLevelMode: () => void;
+  onToggleInterval: (name: IntervalName) => void;
+  onResetIntervals: () => void;
+  onEnableAllIntervals: () => void;
   onLevelUp: () => void;
   onLevelDown: () => void;
 }
@@ -93,12 +98,34 @@ export function Game(props: GameProps) {
   const [hoveredKey, setHoveredKey] = createSignal<Set<number> | null>(null);
   const [levelUpTick, setLevelUpTick] = createSignal(0);
   const [showShortcuts, setShowShortcuts] = createSignal(false);
+  const [intervalsOpen, setIntervalsOpen] = createSignal(false);
+  const [intervalsClosing, setIntervalsClosing] = createSignal(false);
   const [pressedPlay, setPressedPlay] = createSignal(false);
   const [pressedNext, setPressedNext] = createSignal(false);
   const [pressedInterval, setPressedInterval] = createSignal<IntervalName | null>(null);
   const [pressedDir, setPressedDir] = createSignal<DirectionAnswer | null>(null);
   const [isPlayingAnim, setIsPlayingAnim] = createSignal(false);
   let playAnimTimer: ReturnType<typeof setTimeout> | null = null;
+
+  function openIntervals() { setIntervalsOpen(true); }
+  function closeIntervals() {
+    setIntervalsClosing(true);
+    setTimeout(() => { setIntervalsOpen(false); setIntervalsClosing(false); }, 150);
+  }
+  function toggleIntervals() {
+    if (intervalsOpen()) {
+      closeIntervals();
+    } else {
+      openIntervals();
+    }
+  }
+
+  // Close the intervals popover when switching to level mode (button disappears)
+  createEffect(on(() => props.levelState.levelMode, (levelMode) => {
+    if (levelMode && intervalsOpen()) {
+      closeIntervals();
+    }
+  }, { defer: true }));
 
   function triggerPlayAnim() {
     if (playAnimTimer !== null) {
@@ -246,11 +273,6 @@ export function Game(props: GameProps) {
     }
   }
 
-  // Play on mount
-  if (props.settings.autoPlay) {
-    playQuestion(question());
-  }
-
   window.addEventListener('keydown', handleKeyDown);
   onCleanup(() => {
     if (cancelPlayback) {
@@ -289,6 +311,23 @@ export function Game(props: GameProps) {
   createEffect(on(
     () => props.settings.gameMode,
     () => {
+      const q = generateQuestion(props.settings, effectiveEnabledIntervals());
+      setQuestion(q);
+      setAnswered(false);
+      setAnswerResult(null);
+      setSelectedAnswer(null);
+      setSelectedDirAnswer(null);
+      if (props.settings.autoPlay) {
+        playQuestion(q);
+      }
+    },
+    { defer: true }
+  ));
+
+  createEffect(on(
+    () => props.resetTick,
+    () => {
+      cancelPlayback();
       const q = generateQuestion(props.settings, effectiveEnabledIntervals());
       setQuestion(q);
       setAnswered(false);
@@ -358,7 +397,8 @@ export function Game(props: GameProps) {
 
   return (
     <div class="game-panel">
-      <ScorePopover score={props.score} onReset={props.onResetScores}>
+      <ScorePopover score={props.score}>
+        <span class="settings-bar-divider" />
         {/* Mode */}
         <div class="seg-btns">
           <button class="option-btn" classList={{ active: props.settings.gameMode === 'interval' }} onClick={() => props.onSetGameMode('interval')} data-tooltip="Intervals — name the interval">♩</button>
@@ -381,11 +421,60 @@ export function Game(props: GameProps) {
         <button class="option-btn" classList={{ active: props.settings.autoPlay }} onClick={() => props.onSetAutoPlay(!props.settings.autoPlay)} data-tooltip="Auto-play each question">▶</button>
         <button class="option-btn" classList={{ active: props.settings.showRootKey, 'option-btn-off': props.settings.fixedRoot }} onClick={() => { if (!props.settings.fixedRoot) props.onSetShowRootKey(!props.settings.showRootKey); }} data-tooltip={props.settings.fixedRoot ? 'Root always visible (fixed root on)' : 'Show root key on piano before answering'}>♩</button>
         <button class="option-btn" classList={{ active: props.settings.fixedRoot }} onClick={() => props.onSetFixedRoot(!props.settings.fixedRoot)} data-tooltip="Fixed root note (always C4)">C4</button>
-        <button class="option-btn" classList={{ active: props.settings.debugMode }} onClick={props.onToggleDebug} data-tooltip="Show answer (debug mode)">D</button>
-        {/* Right-aligned: volume + intervals */}
+        <Show when={import.meta.env.DEV}>
+          <button class="option-btn" classList={{ active: props.settings.debugMode }} onClick={props.onToggleDebug} data-tooltip="Show answer (debug mode)">D</button>
+        </Show>
+        <button class="option-btn" classList={{ active: props.levelState.levelMode }} onClick={props.onToggleLevelMode} data-tooltip="Level Mode">LV</button>
+        <Show when={!props.levelState.levelMode}>
+          <div class="intervals-trigger-wrap">
+            <button class="option-btn" classList={{ active: intervalsOpen() }} onClick={toggleIntervals} data-tooltip="Select intervals">𝄞</button>
+            <Show when={intervalsOpen()}>
+              <div class="intervals-backdrop" onClick={closeIntervals} />
+              <div class="intervals-popover" classList={{ 'intervals-popover-closing': intervalsClosing() }}>
+                <div class="intervals-popover-header">
+                  <span class="intervals-popover-title">Intervals</span>
+                  <button class="btn-close-popover" onClick={closeIntervals} title="Close">✕</button>
+                </div>
+                <Settings
+                  settings={props.settings}
+                  levelState={props.levelState}
+                  onToggleInterval={props.onToggleInterval}
+                  onResetIntervals={props.onResetIntervals}
+                  onEnableAllIntervals={props.onEnableAllIntervals}
+                />
+              </div>
+            </Show>
+          </div>
+        </Show>
+        <button class="option-btn" onClick={props.onResetScores} data-tooltip="Reset scores & streaks">↺</button>
+        {/* Right-aligned: volume + shortcuts + intervals */}
         <div class="settings-bar-right">
+          <span class="volume-icon">{props.volume === 0 ? '🔇' : props.volume < 0.5 ? '🔉' : '🔊'}</span>
           <input type="range" min="0" max="1" step="0.05" value={props.volume} onInput={e => props.onVolumeChange(parseFloat(e.currentTarget.value))} class="volume-slider-mini" title="Volume" />
-          <button class="option-btn" onClick={props.onOpenSettings} data-tooltip="Intervals — open settings">≡</button>
+          <div class="shortcuts-wrap">
+            <button class="btn-shortcuts" onMouseEnter={() => setShowShortcuts(true)} onMouseLeave={() => setShowShortcuts(false)}>?</button>
+            <Show when={showShortcuts()}>
+              <div class="shortcuts-popover">
+                <div class="shortcuts-title">Keyboard shortcuts</div>
+                <div class="shortcuts-list">
+                  <div class="shortcut-row"><kbd>Space</kbd><span>Play Again</span></div>
+                  <div class="shortcut-row"><kbd>Enter</kbd><span>Next question</span></div>
+                  <div class="shortcut-row"><kbd>D</kbd><span>Toggle debug</span></div>
+                  <Show when={props.settings.gameMode === 'interval'}>
+                    <div class="shortcut-row"><kbd>1</kbd><span class="shortcut-muted">–</span><kbd>0</kbd><kbd>-</kbd><kbd>=</kbd><span>Select interval</span></div>
+                  </Show>
+                  <Show when={props.settings.gameMode === 'direction'}>
+                    <div class="shortcut-row"><kbd>1</kbd><span>Lower</span></div>
+                    <div class="shortcut-row"><kbd>2</kbd><span>Same</span></div>
+                    <div class="shortcut-row"><kbd>3</kbd><span>Higher</span></div>
+                    <div class="shortcut-row"><kbd>↓</kbd><span>Lower</span></div>
+                    <div class="shortcut-row"><kbd>=</kbd><span>Same</span></div>
+                    <div class="shortcut-row"><kbd>↑</kbd><span>Higher</span></div>
+                  </Show>
+                </div>
+              </div>
+            </Show>
+          </div>
         </div>
       </ScorePopover>
 
@@ -442,33 +531,6 @@ export function Game(props: GameProps) {
             <span class="btn-icon">↺</span>
             <span>Play Again</span>
           </button>
-        </div>
-        <div class="shortcuts-wrap">
-
-          <button class="btn-shortcuts" onMouseEnter={() => setShowShortcuts(true)} onMouseLeave={() => setShowShortcuts(false)}>
-            ?
-          </button>
-          <Show when={showShortcuts()}>
-            <div class="shortcuts-popover">
-              <div class="shortcuts-title">Keyboard shortcuts</div>
-              <div class="shortcuts-list">
-                <div class="shortcut-row"><kbd>Space</kbd><span>Play Again</span></div>
-                <div class="shortcut-row"><kbd>Enter</kbd><span>Next question</span></div>
-                <div class="shortcut-row"><kbd>D</kbd><span>Toggle debug</span></div>
-                <Show when={props.settings.gameMode === 'interval'}>
-                  <div class="shortcut-row"><kbd>1</kbd><span class="shortcut-muted">–</span><kbd>0</kbd><kbd>-</kbd><kbd>=</kbd><span>Select interval</span></div>
-                </Show>
-                <Show when={props.settings.gameMode === 'direction'}>
-                  <div class="shortcut-row"><kbd>1</kbd><span>Lower</span></div>
-                  <div class="shortcut-row"><kbd>2</kbd><span>Same</span></div>
-                  <div class="shortcut-row"><kbd>3</kbd><span>Higher</span></div>
-                  <div class="shortcut-row"><kbd>↓</kbd><span>Lower</span></div>
-                  <div class="shortcut-row"><kbd>=</kbd><span>Same</span></div>
-                  <div class="shortcut-row"><kbd>↑</kbd><span>Higher</span></div>
-                </Show>
-              </div>
-            </div>
-          </Show>
         </div>
       </div>
 

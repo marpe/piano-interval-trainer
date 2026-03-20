@@ -1,7 +1,6 @@
 import { createStore, produce } from 'solid-js/store';
-import { createSignal, createEffect, onMount, Show } from 'solid-js';
+import { createSignal, createEffect, onMount } from 'solid-js';
 import { Game } from './components/Game';
-import { Settings } from './components/Settings';
 import type { GameSettings, ScoreState, LevelState, IntervalStat, IntervalName, Direction, PlaybackMode, GameMode, PianoSound } from './types';
 import { DEFAULT_ENABLED, ALL_ENABLED, MAX_LEVEL, CORRECT_PER_LEVEL } from './intervals';
 import { initAudio, setVolume, setSound } from './audio';
@@ -13,23 +12,7 @@ export function App() {
 
   const [settings, setSettings] = createStore<GameSettings>(saved.settings);
   const [volume, setVolumeState] = createSignal(saved.volume);
-  const [settingsOpen, setSettingsOpen] = createSignal(false);
-  const [settingsClosing, setSettingsClosing] = createSignal(false);
-  const [settingsPinned, setSettingsPinned] = createSignal(false);
-
-  function openSettings() { setSettingsOpen(true); }
-  function closeSettings() {
-    setSettingsPinned(false);
-    setSettingsClosing(true);
-    setTimeout(() => { setSettingsOpen(false); setSettingsClosing(false); }, 280);
-  }
-  function toggleSettings() {
-    if (settingsOpen()) {
-      closeSettings();
-    } else {
-      openSettings();
-    }
-  }
+  const [resetTick, setResetTick] = createSignal(0);
 
   const [score, setScore] = createStore<ScoreState>(loadScores());
   const [levelState, setLevelState] = createStore<LevelState>(loadLevelState());
@@ -157,6 +140,8 @@ export function App() {
 
   function resetScores() {
     setScore(emptyScore());
+    setLevelState({ currentLevel: 1, correctInLevel: 0 });
+    setResetTick(t => t + 1);
   }
 
   return (
@@ -180,16 +165,28 @@ export function App() {
           </svg>
           <h1>Piano Interval Trainer</h1>
         </div>
+        <a
+          class="header-github"
+          href="https://github.com/marpe/piano-interval-trainer"
+          target="_blank"
+          rel="noopener noreferrer"
+          title="View on GitHub"
+        >
+          <svg class="github-icon" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+            <path d="M12 2C6.477 2 2 6.477 2 12c0 4.418 2.865 8.166 6.839 9.489.5.092.682-.217.682-.482 0-.237-.009-.868-.013-1.703-2.782.604-3.369-1.342-3.369-1.342-.454-1.154-1.11-1.462-1.11-1.462-.908-.62.069-.608.069-.608 1.003.07 1.531 1.03 1.531 1.03.892 1.529 2.341 1.087 2.91.831.092-.646.35-1.086.636-1.336-2.22-.253-4.555-1.11-4.555-4.943 0-1.091.39-1.984 1.029-2.683-.103-.253-.446-1.27.098-2.647 0 0 .84-.269 2.75 1.025A9.578 9.578 0 0 1 12 6.836a9.59 9.59 0 0 1 2.504.337c1.909-1.294 2.747-1.025 2.747-1.025.546 1.377.202 2.394.1 2.647.64.699 1.028 1.592 1.028 2.683 0 3.842-2.339 4.687-4.566 4.935.359.309.678.919.678 1.852 0 1.336-.012 2.415-.012 2.742 0 .267.18.578.688.48C19.138 20.163 22 16.418 22 12c0-5.523-4.477-10-10-10z"/>
+          </svg>
+          GitHub
+        </a>
       </header>
-      <main classList={{ 'main-pinned': settingsPinned() && settingsOpen() }}>
+      <main>
         <Game
           settings={settings}
           levelState={levelState}
           score={score}
           volume={volume()}
           onScore={handleScore}
-          onResetScores={resetScores}
           onVolumeChange={handleVolumeChange}
+          onResetScores={resetScores}
           onToggleDebug={() => setSettings('debugMode', !settings.debugMode)}
           onSetAutoPlay={setAutoPlay}
           onSetShowRootKey={setShowRootKey}
@@ -197,41 +194,14 @@ export function App() {
           onSetGameMode={setGameMode}
           onSetDirection={setDirection}
           onSetPlaybackMode={setPlaybackMode}
-          onOpenSettings={toggleSettings}
+          onToggleLevelMode={toggleLevelMode}
+          onToggleInterval={toggleInterval}
+          onResetIntervals={resetIntervals}
+          onEnableAllIntervals={enableAllIntervals}
+          resetTick={resetTick()}
           onLevelUp={levelUp}
           onLevelDown={levelDown}
         />
-
-        {/* Settings drawer */}
-        <Show when={settingsOpen()}>
-          <Show when={!settingsPinned()}>
-            <div class="drawer-backdrop" onClick={closeSettings} />
-          </Show>
-          <div class="drawer" classList={{ 'drawer-closing': settingsClosing(), 'drawer-pinned': settingsPinned() }}>
-            <div class="drawer-inner-header">
-              <span class="drawer-title">Intervals</span>
-              <button
-                class="btn-pin"
-                classList={{ active: settingsPinned() }}
-                onClick={() => setSettingsPinned(!settingsPinned())}
-                title={settingsPinned() ? 'Unpin panel' : 'Pin panel open'}
-              >{settingsPinned() ? '⊗' : '⊕'}</button>
-              <button class="btn-close-drawer" onClick={closeSettings} title="Close">✕</button>
-            </div>
-            <Settings
-              settings={settings}
-              levelState={levelState}
-              onToggleInterval={toggleInterval}
-              onResetIntervals={resetIntervals}
-              onEnableAllIntervals={enableAllIntervals}
-              onSetDirection={setDirection}
-              onSetPlaybackMode={setPlaybackMode}
-              onSetGameMode={setGameMode}
-              onToggleLevelMode={toggleLevelMode}
-              onResetLevel={resetLevel}
-            />
-          </div>
-        </Show>
       </main>
     </div>
   );
