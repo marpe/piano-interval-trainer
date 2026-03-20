@@ -65,6 +65,17 @@ main {
   gap: 1.5rem;
 }
 
+main.main-pinned {
+  flex-direction: row;
+  align-items: flex-start;
+  gap: 1.5rem;
+}
+
+main.main-pinned > :first-child {
+  flex: 1;
+  min-width: 0;
+}
+
 /* Top bar (two-row score + settings) */
 .top-bar {
   position: relative;
@@ -548,6 +559,10 @@ main {
 .settings-panel section {
   padding: 0.65rem 0;
   border-top: 1px solid var(--border);
+}
+
+.settings-panel section:first-child {
+  border-top: none;
 }
 
 .settings-panel section:last-child {
@@ -1413,33 +1428,6 @@ input[type="checkbox"] {
   position: relative;
 }
 
-.level-up-stars {
-  position: absolute;
-  right: 0;
-  top: 50%;
-  width: 0;
-  height: 0;
-  pointer-events: none;
-  z-index: 2;
-  overflow: visible;
-}
-
-.level-up-star {
-  position: absolute;
-  top: 0;
-  left: 0;
-  font-size: 1.2rem;
-  color: #ffd700;
-  line-height: 1;
-  animation: star-burst 1.5s ease-out forwards;
-}
-
-@keyframes star-burst {
-  0%   { opacity: 0;   transform: translate(-50%, -50%) scale(0)   rotate(0deg); }
-  20%  { opacity: 1;   transform: translate(calc(-50% + 0.3 * var(--tx)), calc(-50% + 0.3 * var(--ty))) scale(1.5) rotate(130deg); }
-  65%  { opacity: 0.8; transform: translate(calc(-50% + 0.8 * var(--tx)), calc(-50% + 0.8 * var(--ty))) scale(1.0) rotate(330deg); }
-  100% { opacity: 0;   transform: translate(calc(-50% + var(--tx)), calc(-50% + var(--ty)))               scale(0.2) rotate(480deg); }
-}
 
 .level-header {
   display: flex;
@@ -1588,6 +1576,19 @@ input[type="checkbox"] {
 
 .drawer-closing {
   animation: drawer-slide-out 0.28s cubic-bezier(0.32, 0.72, 0, 1) forwards;
+}
+
+.drawer-pinned {
+  position: static;
+  width: 300px;
+  min-width: 300px;
+  height: auto;
+  align-self: flex-start;
+  border-left: 1px solid var(--border);
+  border-radius: 12px;
+  box-shadow: none;
+  animation: none;
+  overflow-y: visible;
 }
 
 @keyframes drawer-slide-in {

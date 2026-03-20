@@ -91,7 +91,7 @@ export function Game(props: GameProps) {
   const [selectedAnswer, setSelectedAnswer] = createSignal<IntervalName | null>(null);
   const [selectedDirAnswer, setSelectedDirAnswer] = createSignal<DirectionAnswer | null>(null);
   const [hoveredKey, setHoveredKey] = createSignal<Set<number> | null>(null);
-  const [showLevelUp, setShowLevelUp] = createSignal(false);
+  const [levelUpTick, setLevelUpTick] = createSignal(0);
   const [showShortcuts, setShowShortcuts] = createSignal(false);
   const [pressedPlay, setPressedPlay] = createSignal(false);
   const [pressedNext, setPressedNext] = createSignal(false);
@@ -121,8 +121,7 @@ export function Game(props: GameProps) {
     () => props.levelState.currentLevel,
     (curr, prev) => {
       if (prev !== undefined && curr > prev) {
-        setShowLevelUp(true);
-        setTimeout(() => setShowLevelUp(false), 2500);
+        setLevelUpTick(t => t + 1);
       }
     }
   ));
@@ -268,13 +267,28 @@ export function Game(props: GameProps) {
     () => [
       props.settings.direction,
       effectiveEnabledIntervals(),
-      props.settings.gameMode,
       props.settings.fixedRoot,
     ] as const,
     () => {
       if (answered()) {
         return;
       }
+      const q = generateQuestion(props.settings, effectiveEnabledIntervals());
+      setQuestion(q);
+      setAnswered(false);
+      setAnswerResult(null);
+      setSelectedAnswer(null);
+      setSelectedDirAnswer(null);
+      if (props.settings.autoPlay) {
+        playQuestion(q);
+      }
+    },
+    { defer: true }
+  ));
+
+  createEffect(on(
+    () => props.settings.gameMode,
+    () => {
       const q = generateQuestion(props.settings, effectiveEnabledIntervals());
       setQuestion(q);
       setAnswered(false);
@@ -376,7 +390,7 @@ export function Game(props: GameProps) {
       </ScorePopover>
 
       <Show when={props.levelState.levelMode}>
-        <LevelProgress levelState={props.levelState} showLevelUp={showLevelUp()} />
+        <LevelProgress levelState={props.levelState} levelUpTick={levelUpTick()} />
         <Show when={props.settings.debugMode}>
           <div class="debug-level-btns">
             <button class="option-btn" onClick={props.onLevelDown}>LV−</button>

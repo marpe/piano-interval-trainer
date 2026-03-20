@@ -181,7 +181,7 @@ export function App() {
           <h1>Piano Interval Trainer</h1>
         </div>
       </header>
-      <main>
+      <main classList={{ 'main-pinned': settingsPinned() && settingsOpen() }}>
         <Game
           settings={settings}
           levelState={levelState}
@@ -207,7 +207,7 @@ export function App() {
           <Show when={!settingsPinned()}>
             <div class="drawer-backdrop" onClick={closeSettings} />
           </Show>
-          <div class="drawer" classList={{ 'drawer-closing': settingsClosing() }}>
+          <div class="drawer" classList={{ 'drawer-closing': settingsClosing(), 'drawer-pinned': settingsPinned() }}>
             <div class="drawer-inner-header">
               <span class="drawer-title">Intervals</span>
               <button
