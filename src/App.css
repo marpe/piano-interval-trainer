@@ -1666,3 +1666,125 @@ input[type="checkbox"] {
   width: 100%;
   flex: none;
 }
+
+/* ── Mobile ───────────────────────────────────────────────── */
+@media (max-width: 600px) {
+  .app {
+    padding: 0.5rem;
+  }
+
+  header {
+    padding: 0.75rem 0 0.5rem;
+    margin-bottom: 0.75rem;
+  }
+
+  header h1 {
+    font-size: 1.35rem;
+  }
+
+  .logo-svg {
+    width: 30px;
+    height: 30px;
+  }
+
+  /* Hide GitHub link on small screens to avoid crowding the title */
+  .header-github {
+    display: none;
+  }
+
+  /* Tighten main gap */
+  main {
+    gap: 1rem;
+  }
+
+  /* Score row */
+  .score-display {
+    gap: 0.6rem;
+    padding: 0.35rem 0;
+  }
+
+  .score-numbers {
+    font-size: 1.05rem;
+  }
+
+  .score-numbers strong {
+    font-size: 1.25rem;
+  }
+
+  /* Direction buttons: reduce oversized padding */
+  .direction-btn {
+    padding: 1rem 0.5rem;
+    gap: 0.25rem;
+  }
+
+  .dir-icon {
+    font-size: 1.5rem;
+  }
+
+  .dir-label {
+    font-size: 0.85rem;
+  }
+
+  /* Popovers: switch from anchored-absolute to fixed full-width */
+  .intervals-popover {
+    position: fixed;
+    top: auto;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    width: 100%;
+    max-height: 75vh;
+    border-radius: 16px 16px 0 0;
+    animation: popover-slide-up 0.2s ease forwards;
+  }
+
+  .intervals-popover-closing {
+    animation: popover-slide-down 0.15s ease forwards !important;
+  }
+
+  @keyframes popover-slide-up {
+    from { opacity: 0; transform: translateY(20px); }
+    to   { opacity: 1; transform: translateY(0); }
+  }
+
+  @keyframes popover-slide-down {
+    from { opacity: 1; transform: translateY(0); }
+    to   { opacity: 0; transform: translateY(20px); }
+  }
+
+  .stats-popover {
+    position: fixed;
+    top: auto;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    min-width: unset;
+    width: 100%;
+    border-radius: 16px 16px 0 0;
+    animation: popover-slide-up 0.2s ease forwards;
+  }
+
+  .stats-popover.stats-closing {
+    animation: popover-slide-down 0.15s ease forwards;
+  }
+
+  .shortcuts-popover {
+    position: fixed;
+    top: auto;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    border-radius: 16px 16px 0 0;
+    white-space: normal;
+  }
+
+  /* Volume slider: let it flex wider */
+  .volume-slider-mini {
+    width: 60px;
+  }
+
+  /* Tooltips: hide on touch (they don't work anyway) */
+  .option-btn[data-tooltip]::after {
+    display: none;
+  }
+}
