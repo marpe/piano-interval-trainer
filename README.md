@@ -4,6 +4,8 @@ A web-based ear training app for learning to recognize musical intervals. Listen
 
 **Live app:** https://martinpersson.org/piano-interval-trainer/
 
+![Screenshot](screenshot.png)
+
 ## Features
 
 - 13 intervals from Unison to Octave, each with a song mnemonic as a memory aid
