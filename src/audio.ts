@@ -15,7 +15,7 @@ export function setVolume(v: number): void {
 
 export function getAudioUrl(key: number): string {
   const { dir, ext } = SOUND_META[currentSound];
-  return `/sound/${dir}/${key}.${ext}`;
+  return `${import.meta.env.BASE_URL}sound/${dir}/${key}.${ext}`;
 }
 
 export function setSound(sound: PianoSound): void {
@@ -53,7 +53,7 @@ export function playKey(key: number): void {
 
 export function playKeyWithSound(key: number, sound: PianoSound): void {
   const { dir, ext } = SOUND_META[sound];
-  const url = `/sound/${dir}/${key}.${ext}`;
+  const url = `${import.meta.env.BASE_URL}sound/${dir}/${key}.${ext}`;
   const audio = new Audio(url);
   audio.volume = volume;
   audio.play().catch(() => {});
