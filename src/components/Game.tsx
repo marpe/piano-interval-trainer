@@ -327,7 +327,9 @@ export function Game(props: GameProps) {
   createEffect(on(
     () => props.resetTick,
     () => {
-      cancelPlayback();
+      if (cancelPlayback) {
+        cancelPlayback();
+      }
       const q = generateQuestion(props.settings, effectiveEnabledIntervals());
       setQuestion(q);
       setAnswered(false);

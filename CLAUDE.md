@@ -10,6 +10,12 @@ npm run build     # Type-check (tsc) + production build to /dist
 npm run preview   # Preview production build locally
 ```
 
+For type-checking without a full build, use the local binary — `tsc` is not on the bash PATH (it's a `.ps1` script only available in PowerShell):
+
+```bash
+./node_modules/.bin/tsc --noEmit
+```
+
 No test framework is configured — there are no automated tests.
 
 ## Deployment
