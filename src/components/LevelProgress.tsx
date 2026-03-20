@@ -7,6 +7,14 @@ interface LevelProgressProps {
   showLevelUp: boolean;
 }
 
+const LEVEL_UP_STARS = [
+  { tx: '-28px', ty: '-26px', delay: '0ms'   },
+  { tx:   '4px', ty: '-32px', delay: '65ms'  },
+  { tx:  '28px', ty: '-22px', delay: '125ms' },
+  { tx: '-22px', ty:  '18px', delay: '40ms'  },
+  { tx:  '20px', ty:  '22px', delay: '95ms'  },
+];
+
 export function LevelProgress(props: LevelProgressProps) {
   const isMaxLevel = () => props.levelState.currentLevel >= MAX_LEVEL;
   const nextUnlocks = () => isMaxLevel() ? [] : LEVEL_UNLOCKS[props.levelState.currentLevel];
@@ -15,10 +23,7 @@ export function LevelProgress(props: LevelProgressProps) {
     : (props.levelState.correctInLevel / CORRECT_PER_LEVEL) * 100;
 
   return (
-    <div class="level-progress" classList={{ 'level-up-active': props.showLevelUp }}>
-      <Show when={props.showLevelUp}>
-        <div class="level-up-banner">Level Up!</div>
-      </Show>
+    <div class="level-progress">
       <div class="level-header">
         <span class="level-badge">
           LV {props.levelState.currentLevel}
@@ -28,6 +33,15 @@ export function LevelProgress(props: LevelProgressProps) {
           <div class="level-bar-track">
             <div class="level-bar-fill" style={{ width: `${pct()}%` }} />
           </div>
+          <Show when={props.showLevelUp}>
+            <div class="level-up-stars" aria-hidden="true">
+              <For each={LEVEL_UP_STARS}>
+                {(s) => (
+                  <span class="level-up-star" style={`--tx:${s.tx};--ty:${s.ty};animation-delay:${s.delay}`}>★</span>
+                )}
+              </For>
+            </div>
+          </Show>
         </div>
         <span class="level-count">
           {isMaxLevel() ? CORRECT_PER_LEVEL : props.levelState.correctInLevel}/{CORRECT_PER_LEVEL}

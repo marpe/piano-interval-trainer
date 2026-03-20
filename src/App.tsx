@@ -113,6 +113,14 @@ export function App() {
     setLevelState({ currentLevel: 1, correctInLevel: 0 });
   }
 
+  function levelUp() {
+    setLevelState({ currentLevel: Math.min(levelState.currentLevel + 1, MAX_LEVEL), correctInLevel: 0 });
+  }
+
+  function levelDown() {
+    setLevelState({ currentLevel: Math.max(levelState.currentLevel - 1, 1), correctInLevel: 0 });
+  }
+
   function handleScore(correct: boolean, intervalName: IntervalName) {
     setScore(produce((s: ScoreState) => {
       s.correct += correct ? 1 : 0;
@@ -190,6 +198,8 @@ export function App() {
           onSetDirection={setDirection}
           onSetPlaybackMode={setPlaybackMode}
           onOpenSettings={toggleSettings}
+          onLevelUp={levelUp}
+          onLevelDown={levelDown}
         />
 
         {/* Settings drawer */}

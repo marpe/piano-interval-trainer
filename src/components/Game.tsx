@@ -22,6 +22,8 @@ interface GameProps {
   onSetPlaybackMode: (m: PlaybackMode) => void;
   onVolumeChange: (v: number) => void;
   onOpenSettings: () => void;
+  onLevelUp: () => void;
+  onLevelDown: () => void;
 }
 
 function randomInt(min: number, max: number): number {
@@ -270,6 +272,9 @@ export function Game(props: GameProps) {
       props.settings.fixedRoot,
     ] as const,
     () => {
+      if (answered()) {
+        return;
+      }
       const q = generateQuestion(props.settings, effectiveEnabledIntervals());
       setQuestion(q);
       setAnswered(false);
@@ -372,6 +377,12 @@ export function Game(props: GameProps) {
 
       <Show when={props.levelState.levelMode}>
         <LevelProgress levelState={props.levelState} showLevelUp={showLevelUp()} />
+        <Show when={props.settings.debugMode}>
+          <div class="debug-level-btns">
+            <button class="option-btn" onClick={props.onLevelDown}>LV−</button>
+            <button class="option-btn" onClick={props.onLevelUp}>LV+</button>
+          </div>
+        </Show>
       </Show>
 
       <Show when={props.settings.debugMode}>
