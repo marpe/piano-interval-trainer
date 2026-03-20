@@ -559,7 +559,14 @@ export function Game(props: GameProps) {
                       handleAnswer(interval.name);
                     } else {
                       const q = question();
-                      playMelodic(q.rootKey, q.rootKey + interval.semitones);
+                      const target = q.direction === 'descending'
+                        ? q.rootKey - interval.semitones
+                        : q.rootKey + interval.semitones;
+                      if (props.settings.playbackMode === 'harmonic') {
+                        playHarmonic(q.rootKey, target);
+                      } else {
+                        playMelodic(q.rootKey, target);
+                      }
                     }
                   }}
                   onMouseEnter={() => {

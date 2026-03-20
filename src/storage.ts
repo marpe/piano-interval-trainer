@@ -22,7 +22,7 @@ export function loadState(): PersistedState {
       gameMode: 'interval',
       autoPlay: true,
       showRootKey: true,
-      fixedRoot: false,
+      fixedRoot: true,
       pianoSound: '88-virtual' as PianoSound,
       debugMode: false,
     },
