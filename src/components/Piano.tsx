@@ -30,7 +30,9 @@ function getKeyLeft(k: number): number {
 
 // Returns "C4", "C5", etc. for C notes; null otherwise
 function getCLabel(k: number): string | null {
-  if ((k - 1) % 12 !== 3) return null;
+  if ((k - 1) % 12 !== 3) {
+    return null;
+  }
   const octave = Math.floor((k - 4) / 12) + 1;
   return `C${octave}`;
 }
@@ -60,6 +62,7 @@ interface PianoProps {
   debugMode: boolean;
   hoveredKey: Set<number> | null;
   possibleKeys: Set<number> | null;
+  answerLabel?: { shortName: string; fullName: string };
   onKeyClick: (key: number) => void;
   onKeyHover: (key: number | null) => void;
 }
@@ -71,7 +74,9 @@ export function Piano(props: PianoProps) {
   onMount(() => {
     const obs = new ResizeObserver(entries => {
       const w = entries[0].contentRect.width;
-      if (w > 0) setScale(w / PIANO_WIDTH);
+      if (w > 0) {
+        setScale(w / PIANO_WIDTH);
+      }
     });
     obs.observe(outerRef);
     onCleanup(() => obs.disconnect());
@@ -110,6 +115,21 @@ export function Piano(props: PianoProps) {
   }
 
   const ARC_SPACE = 44;
+
+  const arcLabelX = () => {
+    const x1 = getKeyCenter(props.rootKey);
+    const x2 = getKeyCenter(props.targetKey);
+    return ((x1 + x2) / 2) * scale();
+  };
+
+  const arcLabelY = () => {
+    const x1 = getKeyCenter(props.rootKey);
+    const x2 = getKeyCenter(props.targetKey);
+    const dist = Math.abs(x2 - x1);
+    const maxH = Math.max(8, (ARC_SPACE - 10) / scale());
+    const cy = -(10 + Math.min(dist * 0.22, maxH));
+    return ARC_SPACE + cy * scale();
+  };
 
   return (
     <div
@@ -167,6 +187,21 @@ export function Piano(props: PianoProps) {
           </svg>
         </Show>
       </div>
+      <Show when={props.answerLabel && props.rootKey !== props.targetKey && (props.answered || props.debugMode)}>
+        <div
+          class="piano-arc-label"
+          style={{
+            left: `${arcLabelX()}px`,
+            top: `${arcLabelY()}px`,
+          }}
+        >
+          <span class="dir-interval-label">
+            {props.answerLabel!.shortName}
+            <span class="dir-interval-sep">·</span>
+            {props.answerLabel!.fullName}
+          </span>
+        </div>
+      </Show>
     </div>
   );
 }

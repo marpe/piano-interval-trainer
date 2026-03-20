@@ -1315,6 +1315,19 @@ input[type="checkbox"] {
 }
 
 /* Direction mode interval reveal */
+.piano-arc-label {
+  position: absolute;
+  transform: translate(-50%, -50%);
+  pointer-events: none;
+  z-index: 4;
+  animation: arc-label-enter 0.25s ease;
+}
+
+@keyframes arc-label-enter {
+  from { opacity: 0; transform: translate(-50%, calc(-50% - 6px)); }
+  to   { opacity: 1; transform: translate(-50%, -50%); }
+}
+
 .dir-interval-reveal {
   text-align: center;
   padding: 0.5rem 0;

@@ -24,7 +24,11 @@ export function ScorePopover(props: ScorePopoverProps) {
   }
 
   function handleStatsClick() {
-    if (open()) close(); else setOpen(true);
+    if (open()) {
+      close();
+    } else {
+      setOpen(true);
+    }
   }
 
   function handleReset() {

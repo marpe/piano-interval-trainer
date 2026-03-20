@@ -64,8 +64,12 @@ const DIRECTION_ANSWERS: { answer: DirectionAnswer; label: string; icon: string 
 ];
 
 function getCorrectDirectionAnswer(q: GameQuestion): DirectionAnswer {
-  if (q.targetKey > q.rootKey) return 'higher';
-  if (q.targetKey < q.rootKey) return 'lower';
+  if (q.targetKey > q.rootKey) {
+    return 'higher';
+  }
+  if (q.targetKey < q.rootKey) {
+    return 'lower';
+  }
   return 'same';
 }
 
@@ -95,7 +99,9 @@ export function Game(props: GameProps) {
   let playAnimTimer: ReturnType<typeof setTimeout> | null = null;
 
   function triggerPlayAnim() {
-    if (playAnimTimer !== null) clearTimeout(playAnimTimer);
+    if (playAnimTimer !== null) {
+      clearTimeout(playAnimTimer);
+    }
     setIsPlayingAnim(false);
     queueMicrotask(() => {
       setIsPlayingAnim(true);
@@ -122,9 +128,13 @@ export function Game(props: GameProps) {
   // Derived hover state — computed once, read by every button in the For loops
   // Only highlight interval buttons when root is visible; otherwise it reveals the root position
   const hoveredSemitones = createMemo((): Set<number> | null => {
-    if (!answered() && !props.settings.showRootKey && !props.settings.fixedRoot) return null;
+    if (!answered() && !props.settings.showRootKey && !props.settings.fixedRoot) {
+      return null;
+    }
     const hk = hoveredKey();
-    if (hk === null || hk.size === 0) return null;
+    if (hk === null || hk.size === 0) {
+      return null;
+    }
     const root = question().rootKey;
     return new Set([...hk].map(k => Math.abs(k - root)));
   });
@@ -134,11 +144,15 @@ export function Game(props: GameProps) {
 
   const possibleKeys = createMemo((): Set<number> | null => {
     const effectiveShowRoot = props.settings.showRootKey || props.settings.fixedRoot;
-    if (answered() || !effectiveShowRoot || props.settings.gameMode === 'direction') return null;
+    if (answered() || !effectiveShowRoot || props.settings.gameMode === 'direction') {
+      return null;
+    }
     const root = question().rootKey;
     const dir = props.settings.direction;
     const nonZero = enabledIntervals().map(i => i.semitones).filter(s => s > 0);
-    if (nonZero.length === 0) return null;
+    if (nonZero.length === 0) {
+      return null;
+    }
     const minS = Math.min(...nonZero);
     const maxS = Math.max(...nonZero);
     const keys = new Set<number>();
@@ -154,13 +168,21 @@ export function Game(props: GameProps) {
   });
 
   const hoveredDirAnswer = createMemo((): DirectionAnswer | null => {
-    if (!answered() && !props.settings.showRootKey && !props.settings.fixedRoot) return null;
+    if (!answered() && !props.settings.showRootKey && !props.settings.fixedRoot) {
+      return null;
+    }
     const hk = hoveredKey();
-    if (hk === null || hk.size === 0) return null;
+    if (hk === null || hk.size === 0) {
+      return null;
+    }
     const k = [...hk][0];
     const rk = question().rootKey;
-    if (k > rk) return 'higher';
-    if (k < rk) return 'lower';
+    if (k > rk) {
+      return 'higher';
+    }
+    if (k < rk) {
+      return 'lower';
+    }
     return 'same';
   });
 
@@ -168,7 +190,9 @@ export function Game(props: GameProps) {
   const KEY_DIGITS = ['1','2','3','4','5','6','7','8','9','0','-','='];
 
   function handleKeyDown(e: KeyboardEvent) {
-    if ((e.target as HTMLElement).tagName === 'INPUT') return;
+    if ((e.target as HTMLElement).tagName === 'INPUT') {
+      return;
+    }
     if (e.key === 'd' || e.key === 'D') {
       props.onToggleDebug();
     } else if (e.key === ' ') {
@@ -181,9 +205,20 @@ export function Game(props: GameProps) {
         handleNext();
       }
     } else if (props.settings.gameMode === 'direction') {
-      if (e.key === 'ArrowUp'   || e.key === '3') { e.preventDefault(); flashPress(setPressedDir, 'higher' as DirectionAnswer, null); handleDirectionAnswer('higher'); }
-      if (e.key === 'ArrowDown' || e.key === '1') { e.preventDefault(); flashPress(setPressedDir, 'lower' as DirectionAnswer, null);  handleDirectionAnswer('lower'); }
-      if (e.key === 'ArrowLeft' || e.key === 'ArrowRight' || e.key === '=' || e.key === '2') { flashPress(setPressedDir, 'same' as DirectionAnswer, null); handleDirectionAnswer('same'); }
+      if (e.key === 'ArrowUp'   || e.key === '3') {
+        e.preventDefault();
+        flashPress(setPressedDir, 'higher' as DirectionAnswer, null);
+        handleDirectionAnswer('higher');
+      }
+      if (e.key === 'ArrowDown' || e.key === '1') {
+        e.preventDefault();
+        flashPress(setPressedDir, 'lower' as DirectionAnswer, null);
+        handleDirectionAnswer('lower');
+      }
+      if (e.key === 'ArrowLeft' || e.key === 'ArrowRight' || e.key === '=' || e.key === '2') {
+        flashPress(setPressedDir, 'same' as DirectionAnswer, null);
+        handleDirectionAnswer('same');
+      }
     } else {
       const idx = KEY_DIGITS.indexOf(e.key);
       if (idx !== -1) {
@@ -199,23 +234,30 @@ export function Game(props: GameProps) {
   let cancelPlayback: (() => void) | null = null;
 
   function playQuestion(q: GameQuestion) {
-    if (cancelPlayback) cancelPlayback();
+    if (cancelPlayback) {
+      cancelPlayback();
+    }
     const { rootKey, targetKey } = q;
     if (props.settings.playbackMode === 'melodic' || props.settings.gameMode === 'direction') {
       cancelPlayback = playMelodic(rootKey, targetKey);
     } else {
-      playHarmonic(rootKey, targetKey);
-      cancelPlayback = null;
+      cancelPlayback = playHarmonic(rootKey, targetKey);
     }
   }
 
   // Play on mount
-  if (props.settings.autoPlay) playQuestion(question());
+  if (props.settings.autoPlay) {
+    playQuestion(question());
+  }
 
   window.addEventListener('keydown', handleKeyDown);
   onCleanup(() => {
-    if (cancelPlayback) cancelPlayback();
-    if (playAnimTimer !== null) clearTimeout(playAnimTimer);
+    if (cancelPlayback) {
+      cancelPlayback();
+    }
+    if (playAnimTimer !== null) {
+      clearTimeout(playAnimTimer);
+    }
     window.removeEventListener('keydown', handleKeyDown);
   });
 
@@ -234,29 +276,43 @@ export function Game(props: GameProps) {
       setAnswerResult(null);
       setSelectedAnswer(null);
       setSelectedDirAnswer(null);
-      if (props.settings.autoPlay) playQuestion(q);
+      if (props.settings.autoPlay) {
+        playQuestion(q);
+      }
     },
     { defer: true }
   ));
 
   function handleAnswer(name: IntervalName) {
-    if (answered()) return;
+    if (answered()) {
+      return;
+    }
     const correct = name === question().intervalDef.name;
     setSelectedAnswer(name);
     setAnswerResult(correct ? 'correct' : 'wrong');
     setAnswered(true);
     props.onScore(correct, question().intervalDef.name);
-    if (correct) playCorrectSound(); else playWrongSound();
+    if (correct) {
+      playCorrectSound();
+    } else {
+      playWrongSound();
+    }
   }
 
   function handleDirectionAnswer(answer: DirectionAnswer) {
-    if (answered()) return;
+    if (answered()) {
+      return;
+    }
     const correct = answer === getCorrectDirectionAnswer(question());
     setSelectedDirAnswer(answer);
     setAnswerResult(correct ? 'correct' : 'wrong');
     setAnswered(true);
     props.onScore(correct, question().intervalDef.name);
-    if (correct) playCorrectSound(); else playWrongSound();
+    if (correct) {
+      playCorrectSound();
+    } else {
+      playWrongSound();
+    }
   }
 
   function handleNext() {
@@ -266,7 +322,10 @@ export function Game(props: GameProps) {
     setAnswerResult(null);
     setSelectedAnswer(null);
     setSelectedDirAnswer(null);
-    if (props.settings.autoPlay) { playQuestion(q); triggerPlayAnim(); }
+    if (props.settings.autoPlay) {
+      playQuestion(q);
+      triggerPlayAnim();
+    }
   }
 
   function handlePlayAgain() {
@@ -341,6 +400,7 @@ export function Game(props: GameProps) {
         debugMode={props.settings.debugMode}
         hoveredKey={hoveredKey()}
         possibleKeys={possibleKeys()}
+        answerLabel={answered() ? { shortName: question().intervalDef.shortName, fullName: question().intervalDef.fullName } : undefined}
         onKeyClick={handlePianoKeyClick}
         onKeyHover={(k) => setHoveredKey(k !== null ? new Set([k]) : null)}
       />
@@ -465,15 +525,6 @@ export function Game(props: GameProps) {
             }}
           </For>
         </div>
-        <Show when={answered()}>
-          <div class="dir-interval-reveal">
-            <span class="dir-interval-label">
-              {question().intervalDef.shortName}
-              <span class="dir-interval-sep">·</span>
-              {question().intervalDef.fullName}
-            </span>
-          </div>
-        </Show>
       </Show>
       <button
         class="btn-next"

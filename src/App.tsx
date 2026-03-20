@@ -24,7 +24,11 @@ export function App() {
     setTimeout(() => { setSettingsOpen(false); setSettingsClosing(false); }, 280);
   }
   function toggleSettings() {
-    if (settingsOpen()) closeSettings(); else openSettings();
+    if (settingsOpen()) {
+      closeSettings();
+    } else {
+      openSettings();
+    }
   }
 
   const [score, setScore] = createStore<ScoreState>(loadScores());
@@ -75,10 +79,15 @@ export function App() {
 
   function toggleInterval(name: IntervalName) {
     const current = settings.enabledIntervals;
-    if (current.has(name) && current.size === 1) return;
+    if (current.has(name) && current.size === 1) {
+      return;
+    }
     const next = new Set(current);
-    if (next.has(name)) next.delete(name);
-    else next.add(name);
+    if (next.has(name)) {
+      next.delete(name);
+    } else {
+      next.add(name);
+    }
     setSettings('enabledIntervals', next);
   }
 

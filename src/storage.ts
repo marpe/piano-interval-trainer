@@ -31,7 +31,9 @@ export function loadState(): PersistedState {
 
   try {
     const raw = localStorage.getItem(STORAGE_KEY);
-    if (!raw) return defaults;
+    if (!raw) {
+      return defaults;
+    }
     const p = JSON.parse(raw);
 
     const enabledIntervals = new Set<IntervalName>(
@@ -68,7 +70,9 @@ export function emptyScore(): ScoreState {
 export function loadScores(): ScoreState {
   try {
     const raw = localStorage.getItem(SCORE_KEY);
-    if (!raw) return emptyScore();
+    if (!raw) {
+      return emptyScore();
+    }
     const p = JSON.parse(raw);
     return {
       correct:     typeof p.correct     === 'number' ? p.correct     : 0,
@@ -92,7 +96,9 @@ export function loadLevelState(): LevelState {
   const defaults: LevelState = { levelMode: true, currentLevel: 1, correctInLevel: 0 };
   try {
     const raw = localStorage.getItem(LEVEL_KEY);
-    if (!raw) return defaults;
+    if (!raw) {
+      return defaults;
+    }
     const p = JSON.parse(raw);
     return {
       levelMode: typeof p.levelMode === 'boolean' ? p.levelMode : true,

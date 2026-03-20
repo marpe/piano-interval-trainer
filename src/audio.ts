@@ -19,7 +19,9 @@ export function getAudioUrl(key: number): string {
 }
 
 export function setSound(sound: PianoSound): void {
-  if (sound === currentSound) return;
+  if (sound === currentSound) {
+    return;
+  }
   currentSound = sound;
   audioCache = new Map();
   // Preload the new pack
@@ -40,7 +42,7 @@ export function initAudio(sound: PianoSound = '88-virtual'): void {
   }
 }
 
-export function playKey(key: number): void {
+export function playKey(key: number): HTMLAudioElement {
   let audio = audioCache.get(key);
   if (!audio) {
     audio = new Audio(getAudioUrl(key));
@@ -49,25 +51,21 @@ export function playKey(key: number): void {
   const clone = audio.cloneNode() as HTMLAudioElement;
   clone.volume = volume;
   clone.play().catch(() => {});
-}
-
-export function playKeyWithSound(key: number, sound: PianoSound): void {
-  const { dir, ext } = SOUND_META[sound];
-  const url = `${import.meta.env.BASE_URL}sound/${dir}/${key}.${ext}`;
-  const audio = new Audio(url);
-  audio.volume = volume;
-  audio.play().catch(() => {});
+  return clone;
 }
 
 export function playMelodic(k1: number, k2: number, delay = 500): () => void {
-  playKey(k1);
-  const timer = setTimeout(() => playKey(k2), delay);
-  return () => clearTimeout(timer);
+  const playing: HTMLAudioElement[] = [playKey(k1)];
+  const timer = setTimeout(() => playing.push(playKey(k2)), delay);
+  return () => {
+    clearTimeout(timer);
+    playing.forEach(a => { a.pause(); a.currentTime = 0; });
+  };
 }
 
-export function playHarmonic(k1: number, k2: number): void {
-  playKey(k1);
-  playKey(k2);
+export function playHarmonic(k1: number, k2: number): () => void {
+  const playing = [playKey(k1), playKey(k2)];
+  return () => playing.forEach(a => { a.pause(); a.currentTime = 0; });
 }
 
 export function playSequence(rootKey: number, semitones: number[], noteDelay = 350): () => void {
@@ -81,8 +79,12 @@ export function playSequence(rootKey: number, semitones: number[], noteDelay = 3
 let sharedCtx: AudioContext | null = null;
 
 function getCtx(): AudioContext {
-  if (!sharedCtx || sharedCtx.state === 'closed') sharedCtx = new AudioContext();
-  if (sharedCtx.state === 'suspended') sharedCtx.resume();
+  if (!sharedCtx || sharedCtx.state === 'closed') {
+    sharedCtx = new AudioContext();
+  }
+  if (sharedCtx.state === 'suspended') {
+    sharedCtx.resume();
+  }
   return sharedCtx;
 }
 
